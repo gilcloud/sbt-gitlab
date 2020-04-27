@@ -1,2 +1,9 @@
-*.class
-*.log
+target/
+
+# Metals / bloop
+.metals/
+.bloop/
+
+# Intellij
+.idea/
+
