@@ -1,4 +1,4 @@
-package com.gilandose.sbt
+package com.gilcloud.sbt
 
 import java.io.{IOException, InputStream}
 import java.net.UnknownHostException

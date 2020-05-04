@@ -1,4 +1,4 @@
-package com.gilandose.sbt
+package com.gilcloud.sbt
 
 import sbt.Keys._
 import sbt.{Def, _}

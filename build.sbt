@@ -10,9 +10,9 @@ sbtPlugin := true
 //libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
 //bintrayPackageLabels := Seq("sbt","plugin")
-//bintrayVcsUrl := Some("""git@github.com:com.gilandose/sbt-gitlab.git""")
+//bintrayVcsUrl := Some("""git@github.com:com.gilcloud/sbt-gitlab.git""")
 
-initialCommands in console := """import com.gilandose.sbt._"""
+initialCommands in console := """import com.gilcloud.sbt._"""
 
 enablePlugins(ScriptedPlugin)
 // set up 'scripted; sbt plugin for testing sbt plugins
