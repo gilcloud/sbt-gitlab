@@ -15,6 +15,10 @@ object GitlabPlugin extends AutoPlugin {
     publishMavenStyle := true,
     headerAuth := {
       val cred = (credentials).value
+      cred.filter{
+        case f : FileCredentials => f.path.exists()
+        case _ => true
+      }
       val creds = Credentials.allDirect(cred)
       creds.find(_.realm == "gitlab") match {
         case Some(cred) =>
