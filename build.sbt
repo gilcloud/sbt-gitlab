@@ -1,6 +1,6 @@
 name := "sbt-gitlab"
 organization := "net.thecoda"
-version := "0.0.3"
+version := "0.0.25"
 
 sbtPlugin := true
 
