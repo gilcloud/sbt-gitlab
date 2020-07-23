@@ -1,11 +1,11 @@
 package com.gilcloud.sbt.gitlab
 
-import net.thecoda.sbt.gitlab.GitlabPlugin.autoImport.GitlabCredentials
 import okhttp3.{Interceptor, Response}
 import sbt.util.Logger
 
 case class HeaderInjector(
     creds: GitlabCredentials,
+    hostMatch: String,
     optLogger: Option[Logger] = None
 ) extends Interceptor {
   def logInfo(str: => String): Unit  = optLogger.foreach(_.info(str))
@@ -14,7 +14,7 @@ case class HeaderInjector(
   override def intercept(chain: Interceptor.Chain): Response = {
     val oldReq = chain.request()
     chain.proceed(
-      if (oldReq.url.host.contains("gitlab.com")) {
+      if (oldReq.url.host.contains(hostMatch)) {
         logInfo(s"injecting gitlab token for $oldReq")
         val newReq =
           oldReq.newBuilder().addHeader(creds.key, creds.value).build()
