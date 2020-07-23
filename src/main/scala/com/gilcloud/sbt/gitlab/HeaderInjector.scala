@@ -15,7 +15,7 @@ case class HeaderInjector(
     val oldReq = chain.request()
     chain.proceed(
       if (oldReq.url.host.contains(hostMatch)) {
-        logInfo(s"injecting gitlab token for $oldReq")
+        logDebug(s"injecting gitlab token for $oldReq")
         val newReq =
           oldReq.newBuilder().addHeader(creds.key, creds.value).build()
         logDebug(newReq.toString)
