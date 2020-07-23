@@ -1,7 +1,7 @@
 name := "sbt-gitlab"
 organization := "com.gilcloud"
-version := "0.0.25"
-
+version := "0.0.1"
+description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
 sbtPlugin := true
 
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
@@ -11,7 +11,9 @@ licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
 
 bintrayPackageLabels := Seq("sbt", "plugin")
 bintrayVcsUrl := Some("git@github.com:gilcloud/sbt-gitlab.git")
-bintrayRepository := "maven"
+publishMavenStyle := false
+bintrayRepository := "sbt-plugins"
+bintrayOrganization := Some("gilcloud")
 
 initialCommands in console := "import com.gilcloud.sbt.gitlab._"
 
