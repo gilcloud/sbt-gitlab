@@ -3,11 +3,7 @@
 Gitlab dependency resolution and artifact publishing for sbt
 
 ```scala
-
-resolvers += Resolver.bintrayIvyRepo("gilcloud", "sbt-plugins")
 addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.3")
-
-
 ```
 
 ## Usage
