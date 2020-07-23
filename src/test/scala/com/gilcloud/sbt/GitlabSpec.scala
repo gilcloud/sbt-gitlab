@@ -1,4 +1,4 @@
-package com.gilcloud.sbt.gitlab
+package com.gilcloud.sbt
 
 class GitlabTest {
   // write tests with your preferred framework
