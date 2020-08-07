@@ -47,7 +47,7 @@ object GitlabPlugin extends AutoPlugin {
   ): OkHttpClient.Builder =
     optCreds match {
       case Some(credentials) =>
-        optLogger.foreach(_.info("building gitlab custom http client"))
+        optLogger.foreach(_.debug("building gitlab custom http client"))
         existingBuilder
           .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
       case None =>
