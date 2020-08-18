@@ -23,6 +23,9 @@ object GitlabPlugin extends AutoPlugin {
     val gitlabProjectId = settingKey[Option[Int]](
       "Numeric ID for the gitlab project, available on the project's home page"
     )
+    val gitlabGroupId = settingKey[Option[Int]](
+      "Numeric ID for the gitlab group, available on the group's home page"
+    )
     val gitlabCredentials = settingKey[Option[GitlabCredentials]]("")
     val gitlabDomain =
       settingKey[String]("Domain for gitlab override if privately hosted repo")
@@ -44,7 +47,7 @@ object GitlabPlugin extends AutoPlugin {
   ): OkHttpClient.Builder =
     optCreds match {
       case Some(credentials) =>
-        optLogger.foreach(_.info("building gitlab custom http client"))
+        optLogger.foreach(_.debug("building gitlab custom http client"))
         existingBuilder
           .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
       case None =>
@@ -68,6 +71,9 @@ object GitlabPlugin extends AutoPlugin {
       publishMavenStyle := true,
       gitlabProjectId := sys.env
         .get("CI_PROJECT_ID")
+        .flatMap(str => Try(str.toInt).toOption),
+      gitlabGroupId := sys.env
+        .get("CI_GROUP_ID")
         .flatMap(str => Try(str.toInt).toOption),
       gitlabCredentials := {
         sys.env
@@ -101,9 +107,8 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value map { p =>
-          "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven"
-        }
+        gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
+        gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
       }
     )
 }
