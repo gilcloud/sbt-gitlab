@@ -2,6 +2,10 @@
 
 Gitlab dependency resolution and artifact publishing for sbt
 
+```scala
+addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.4")
+```
+
 ## Usage
 
 This plugin requires sbt 1.0.0+
