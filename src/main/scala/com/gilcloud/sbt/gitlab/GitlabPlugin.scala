@@ -17,7 +17,7 @@ object GitlabPlugin extends AutoPlugin {
   
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
-    
+
   // This plugin will load automatically
   override def trigger: PluginTrigger = allRequirements
 
@@ -61,9 +61,12 @@ object GitlabPlugin extends AutoPlugin {
           downloader: URLHandler
       ): Unit = {}
     }
-
+  
   override def projectSettings: Seq[Def.Setting[_]] =
-    inScope(publish.scopedKey.scope)(Seq(
+    inScope(publish.scopedKey.scope)(gitLabProjectSettings)
+
+  val gitLabProjectSettings : Seq[Def.Setting[_]] = 
+    Seq(
       publishMavenStyle := true,
       gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId := sys.env
@@ -107,5 +110,5 @@ object GitlabPlugin extends AutoPlugin {
         gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
         gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
       }
-    ))
+    )
 }
