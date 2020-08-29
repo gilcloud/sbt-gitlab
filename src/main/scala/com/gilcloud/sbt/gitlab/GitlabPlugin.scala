@@ -32,8 +32,6 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  override def trigger: PluginTrigger = allRequirements
-
   override def globalSettings =
     Seq(
       gitlabDomain := "gitlab.com"
