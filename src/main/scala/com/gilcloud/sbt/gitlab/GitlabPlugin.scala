@@ -32,11 +32,6 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  override def globalSettings =
-    Seq(
-      gitlabDomain := "gitlab.com"
-    )
-
   def headerEnrichingClientBuilder(
       existingBuilder: OkHttpClient.Builder,
       domain: String,
@@ -67,6 +62,7 @@ object GitlabPlugin extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] =
     Seq(
       publishMavenStyle := true,
+      gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId := sys.env
         .get("CI_PROJECT_ID")
         .flatMap(str => Try(str.toInt).toOption),
