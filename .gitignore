@@ -1,9 +1,15 @@
 target/
+project/project/
 
 # Metals / bloop
 .metals/
 .bloop/
+project/metals.sbt
+
 
 # Intellij
 .idea/
+
+#vscode
+.vscode/
 
