@@ -4,8 +4,6 @@ Gitlab dependency resolution and artifact publishing for sbt
 
 ```scala
 addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.6") // in your project/plugins.sbt file
-
-enablePlugin(GitLabPlugin) // in your build.sbt file
 ```
 
 
@@ -15,7 +13,7 @@ This plugin requires sbt 1.0.0+
 
 ### Publishing to Gitlab via Gitlab CI/CD
 
-Utilizing the sbt publish command within GitLab CI/CD should require no additional configuration. This plugin Automaticall pulls the following GitLab environment variabls which should always be provided by default within GitLab Pipelines
+Utilizing the sbt publish command within GitLab CI/CD should require no additional configuration. This plugin automatically pulls the following GitLab environment variables which should always be provided by default within GitLab Pipelines
 
 ```shell
 $CI_JOB_TOKEN   # Access Token to authorize read/writes to the gitlab pakcage registry

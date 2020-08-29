@@ -9,14 +9,17 @@ import org.apache.ivy.util.url.{
 import sbt.Keys._
 import sbt.internal.CustomHttp
 import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt.{Credentials, Def, _}
+import sbt._
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
 
+  
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
+    
   // This plugin will load automatically
+  override def trigger: PluginTrigger = allRequirements
 
   object autoImport {
 
@@ -60,7 +63,7 @@ object GitlabPlugin extends AutoPlugin {
     }
 
   override def projectSettings: Seq[Def.Setting[_]] =
-    Seq(
+    inScope(publish.scopedKey.scope)(Seq(
       publishMavenStyle := true,
       gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId := sys.env
@@ -104,5 +107,5 @@ object GitlabPlugin extends AutoPlugin {
         gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
         gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
       }
-    )
+    ))
 }
