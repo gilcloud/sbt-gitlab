@@ -9,14 +9,17 @@ import org.apache.ivy.util.url.{
 import sbt.Keys._
 import sbt.internal.CustomHttp
 import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt.{Credentials, Def, _}
+import sbt._
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
 
+  
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
+
   // This plugin will load automatically
+  override def trigger: PluginTrigger = allRequirements
 
   object autoImport {
 
@@ -31,13 +34,6 @@ object GitlabPlugin extends AutoPlugin {
       settingKey[String]("Domain for gitlab override if privately hosted repo")
   }
   import autoImport._
-
-  override def trigger: PluginTrigger = allRequirements
-
-  override def globalSettings =
-    Seq(
-      gitlabDomain := "gitlab.com"
-    )
 
   def headerEnrichingClientBuilder(
       existingBuilder: OkHttpClient.Builder,
@@ -65,10 +61,14 @@ object GitlabPlugin extends AutoPlugin {
           downloader: URLHandler
       ): Unit = {}
     }
-
+  
   override def projectSettings: Seq[Def.Setting[_]] =
+    inScope(publish.scopedKey.scope)(gitLabProjectSettings)
+
+  val gitLabProjectSettings : Seq[Def.Setting[_]] = 
     Seq(
       publishMavenStyle := true,
+      gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId := sys.env
         .get("CI_PROJECT_ID")
         .flatMap(str => Try(str.toInt).toOption),
