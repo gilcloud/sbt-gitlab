@@ -11,6 +11,12 @@ addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.6") // in your project/plugins
 
 This plugin requires sbt 1.0.0+
 
+### Dependency Resolution
+This plugin also supports dependency resolution from private gitlab package repositories, to use this you need to which to ivy for dependency resolution rather than the now default coursier as this plugin overrides the handler for ivy. This can be done for example by adding. 
+```scala
+ThisBuild / useCoursier := false
+```
+
 ### Publishing to Gitlab via Gitlab CI/CD
 
 Utilizing the sbt publish command within GitLab CI/CD should require no additional configuration. This plugin automatically pulls the following GitLab environment variables which should always be provided by default within GitLab Pipelines
