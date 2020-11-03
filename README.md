@@ -37,7 +37,7 @@ import com.gilcloud.sbt.gitlab.{GitlabCredentials,GitlabPlugin}
 GitlabPlugin.autoImport.gitlabGroupId     :=  Some(12345)
 GitlabPlugin.autoImport.gitlabProjectId   :=  Some(12345)
 GitlabPlugin.autoImport.gitlabDomain      :=  "my-gitlab-host.com"
-GitlabPlugin.autoImport.GitlabCredentials :=  Some(GitlabCredentials("Private-Token","<API-KEY>"))
+GitlabPlugin.autoImport.gitlabCredentials :=  Some(GitlabCredentials("Private-Token","<API-KEY>"))
 
 // Alternatively for credential managment 
 // ideal for pulling artifacts locally and keeping tokens out of your source control
