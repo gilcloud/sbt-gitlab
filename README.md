@@ -12,7 +12,7 @@ addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.6") // in your project/plugins
 This plugin requires sbt 1.0.0+
 
 ### Dependency Resolution
-This plugin also supports dependency resolution from private gitlab package repositories, to use this you need to which to ivy for dependency resolution rather than the now default coursier as this plugin overrides the handler for ivy. This can be done for example by adding. 
+This plugin also supports dependency resolution from private gitlab package repositories, to use this you need to switch to ivy for dependency resolution rather than the now default coursier as this plugin overrides the handler for ivy. This can be done for example by adding. 
 ```scala
 ThisBuild / useCoursier := false
 ```
@@ -53,7 +53,6 @@ user=Private-Token
 password=<API-KEY>
 ```
 
-In order to publish to 
 ### Testing
 
 Run `test` for regular unit tests.
