@@ -1,5 +1,5 @@
 package nl.zolotko.sbt.gitlab
 
-class GitlabTest {
+class GitlabSpec {
   // write tests with your preferred framework
 }

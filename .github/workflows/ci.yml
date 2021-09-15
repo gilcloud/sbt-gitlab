@@ -23,7 +23,8 @@ jobs:
       - uses: olafurpg/setup-scala@v10
         with:
           java-version: zulu@1.8
-      - run: sbt scalafmtCheckAll scalafmtSbtCheck scripted publishLocal
+#      - run: sbt scalafmtCheckAll scalafmtSbtCheck test scripted publishLocal
+      - run: sbt scalafmtCheckAll scalafmtSbtCheck test publishLocal
       - uses: actions/upload-artifact@v2
         with:
           name: sbt-gitlab
