@@ -1,9 +1,5 @@
-{
-  val pluginVersion = System.getProperty("plugin.version")
-  if (pluginVersion == null)
-    throw new RuntimeException(
-      """|The system property 'plugin.version' is not defined.
-                                  |Specify this property using the scriptedLaunchOpts -D.""".stripMargin
-    )
-  else addSbtPlugin("com.gilcloud" % """sbt-gitlab""" % pluginVersion)
+sys.props.get("sbt.gitlab.version") match {
+  case Some(ver) => addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % ver)
+  case _         => sys.error("""|The system property 'sbt.gitlab.version' is not defined.
+                                 |Specify this property using the scriptedLaunchOpts -D.""".stripMargin)
 }

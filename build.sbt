@@ -1,25 +1,48 @@
 name := "sbt-gitlab"
-organization := "com.gilcloud"
-version := "0.0.7-SNAPSHOT"
+organization := "nl.zolotko.sbt"
+
 description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
 sbtPlugin := true
 
-licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
-developers := List(Developer("gilandose", "Richard Gilmore", "richard.gilmore  gmail com", url("http://gilcloud.com/")))
+licenses := Seq(
+  "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")
+)
+developers := List(
+  Developer(
+    "gilandose",
+    "Richard Gilmore",
+    "richard.gilmore  gmail com",
+    url("http://gilcloud.com/")
+  ),
+  Developer(
+    "azolotko",
+    "Alex Zolotko",
+    "azolotko@gmail.com",
+    url("https://github.com/azolotko")
+  )
+)
 startYear := Some(2020)
 homepage := scmInfo.value map (_.browseUrl)
-scmInfo := Some(ScmInfo(url("https://github.com/gilcloud/sbt-gitlab"), "scm:git:git@github.com:gilcloud/sbt-gitlab.git"))
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/azolotko/sbt-gitlab"),
+    "scm:git:git@github.com:azolotko/sbt-gitlab.git"
+  )
+)
 
+console / initialCommands := "import nl.zolotko.sbt.gitlab._"
 
-bintrayPackageLabels := Seq("sbt", "plugin")
-bintrayVcsUrl := Some("https://github.com/gilcloud/sbt-gitlab.git")
-publishMavenStyle := false
-bintrayRepository := "sbt-plugins"
-bintrayOrganization := Some("gilcloud")
+enablePlugins(SbtPlugin)
 
-console / initialCommands := "import com.gilcloud.sbt.gitlab._"
+scriptedBufferLog := false
 
-enablePlugins(ScriptedPlugin)
-// set up 'scripted; sbt plugin for testing sbt plugins
-scriptedLaunchOpts ++=
-  Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+scriptedLaunchOpts := (
+  scriptedLaunchOpts.value ++
+    Seq("-Xmx1g", "-Dsbt.gitlab.version=" + version.value)
+)
+
+publishTo := sonatypePublishToBundle.value
+
+sonatypeCredentialHost := "s01.oss.sonatype.org"
+
+sonatypeProfileName := "nl.zolotko.sbt"

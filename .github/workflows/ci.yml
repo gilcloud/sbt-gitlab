@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ '*.*.*' ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.sbt
+            ~/.cache/coursier/v1
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-build-cache-${{ hashFiles('*.sbt') }}-${{ hashFiles('project/*') }}
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: zulu@1.8
+      - run: sbt scalafmtCheckAll scalafmtSbtCheck scripted publishLocal
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sbt-gitlab
+          path: /home/runner/.ivy2/local
+  scripted:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - { sbt: latest,  java: 8  }
+          - { sbt: latest,  java: 11 }
+          - { sbt: latest,  java: 16 }
+      fail-fast: false
+    name: test (java ${{ matrix.java }}, sbt ${{ matrix.sbt }})
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.sbt
+            ~/.cache/coursier/v1
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-scripted-cache-${{ matrix.sbt }}-${{ hashFiles('*.sbt') }}-${{ hashFiles('project/*') }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: sbt-gitlab
+          path: /home/runner/.ivy2/local
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: zulu@1.${{ matrix.java }}
+      - run: sbt scripted
+        env:
+          CI: true
+  test:
+    runs-on: ubuntu-latest
+    needs: scripted
+    steps:
+      - run: true
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.repository == 'azolotko/sbt-gitlab' && ( github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') )
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.sbt
+            ~/.cache/coursier/v1
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-publish-cache-${{ hashFiles('*.sbt') }}-${{ hashFiles('project/*') }}
+      - uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: zulu@1.8
+      - run: sbt publishSigned
+        env: 
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: sbt sonatypeBundleRelease
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

@@ -1,4 +1,4 @@
-package com.gilcloud.sbt.gitlab
+package nl.zolotko.sbt.gitlab
 
 import lmcoursier.definitions.Authentication
 import okhttp3.OkHttpClient

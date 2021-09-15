@@ -1,4 +1,4 @@
-package com.gilcloud.sbt.gitlab
+package nl.zolotko.sbt.gitlab
 
 import sbt.DirectCredentials
 

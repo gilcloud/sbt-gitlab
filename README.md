@@ -3,19 +3,16 @@
 Gitlab dependency resolution and artifact publishing for sbt
 
 ```scala
-addSbtPlugin("com.gilcloud" % "sbt-gitlab" % "0.0.6") // in your project/plugins.sbt file
+addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.7") // in your project/plugins.sbt file
 ```
 
 
 ## Usage
 
-This plugin requires sbt 1.3.0+ as it relies on sbt.internal.CustomHTTP
+This plugin requires sbt 1.5.0+ as it relies on Coursier and sbt.internal.CustomHTTP
  
 ### Dependency Resolution
-This plugin also supports dependency resolution from private gitlab package repositories, to use this you need to switch to ivy for dependency resolution rather than the now default coursier as this plugin overrides the handler for ivy. This can be done for example by adding. 
-```scala
-ThisBuild / useCoursier := false
-```
+This plugin also supports dependency resolution from private gitlab package repositories.
 
 ### Publishing to Gitlab via Gitlab CI/CD
 
@@ -32,7 +29,7 @@ $CI_SERVER_HOST # The host name for gitlab defaults to gitlab.com
 Any of these 'defaults' can be overwritten in your build.sbt file
 
 ```scala
-import com.gilcloud.sbt.gitlab.{GitlabCredentials,GitlabPlugin}
+import nl.zolotko.sbt.gitlab.{GitlabCredentials,GitlabPlugin}
 
 GitlabPlugin.autoImport.gitlabGroupId     :=  Some(12345)
 GitlabPlugin.autoImport.gitlabProjectId   :=  Some(12345)
@@ -59,13 +56,7 @@ Run `test` for regular unit tests.
 
 Run `scripted` for [sbt script tests](http://www.scala-sbt.org/1.x/docs/Testing-sbt-plugins.html).
 
-### Publishing
 
-1. publish your source to GitHub
-2. [create a bintray account](https://bintray.com/signup/index) and [set up bintray credentials](https://github.com/sbt/sbt-bintray#publishing)
-3. create a bintray repository `sbt-plugins`
-4. update your bintray publishing settings in `build.sbt`
-5. `sbt publish`
-6. [request inclusion in sbt-plugin-releases](https://bintray.com/sbt/sbt-plugin-releases)
-7. [Add your plugin to the community plugins list](https://github.com/sbt/website#attention-plugin-authors)
-8. [Claim your project an Scaladex](https://github.com/scalacenter/scaladex-contrib#claim-your-project)
+### Credits
+
+This plugin a fork of [gilcloud/sbt-gitlab](https://github.com/gilcloud/sbt-gitlab).
