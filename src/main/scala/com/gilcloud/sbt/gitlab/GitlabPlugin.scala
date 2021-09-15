@@ -1,5 +1,6 @@
 package com.gilcloud.sbt.gitlab
 
+import lmcoursier.definitions.Authentication
 import okhttp3.OkHttpClient
 import org.apache.ivy.util.url.{
   URLHandler,
@@ -14,7 +15,6 @@ import sbt._
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
 
-  
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
 
@@ -61,11 +61,23 @@ object GitlabPlugin extends AutoPlugin {
           downloader: URLHandler
       ): Unit = {}
     }
-  
+
   override def projectSettings: Seq[Def.Setting[_]] =
     inScope(publish.scopedKey.scope)(gitLabProjectSettings)
 
-  val gitLabProjectSettings : Seq[Def.Setting[_]] = 
+  private val gitlabCredentialsHandler = Def.task {
+    gitlabCredentials.value.orElse {
+      Credentials
+        .allDirect(credentials.value.filter {
+          case f: FileCredentials => f.path.exists()
+          case _                  => true
+        })
+        .find(_.realm == "gitlab")
+        .map { GitlabCredentials(_) }
+    }
+  }
+
+  val gitLabProjectSettings : Seq[Def.Setting[_]] =
     Seq(
       publishMavenStyle := true,
       gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
@@ -81,15 +93,7 @@ object GitlabPlugin extends AutoPlugin {
           .map(GitlabCredentials("Job-Token", _))
       },
       headerAuthHandler := {
-        val cred = gitlabCredentials.value.orElse {
-          Credentials
-            .allDirect(credentials.value.filter {
-              case f: FileCredentials => f.path.exists()
-              case _                  => true
-            })
-            .find(_.realm == "gitlab")
-            .map { GitlabCredentials(_) }
-        }
+        val cred = gitlabCredentialsHandler.value
         val logger = streams.value.log
         val client = headerEnrichingClientBuilder(
           CustomHttp.okhttpClientBuilder.value,
@@ -107,8 +111,34 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
-        gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
+        gitlabProjectId.value.map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
+        gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _))
+      },
+      resolvers ++= gitlabProjectId.value
+        .map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
+        gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _)),
+      csrConfiguration := {
+        val current = csrConfiguration.value
+        gitlabCredentialsHandler.value.fold(current) { token =>
+          current.addRepositoryAuthentication(
+            repositoryName,
+            Authentication(Seq(token.key -> token.value))
+          )
+        }
       }
     )
+
+  private val repositoryName = "gitlab-maven"
+
+  private def gitlabProjectRepository(
+      gitlabDomain: String,
+      projectId: Int
+  ): MavenRepository =
+    repositoryName at s"https://$gitlabDomain/api/v4/projects/$projectId/packages/maven"
+
+  private def gitlabGroupRepository(
+      gitlabDomain: String,
+      groupId: Int
+  ): MavenRepository =
+    repositoryName at s"https://$gitlabDomain/api/v4/groups/$groupId/-/packages/maven"
 }
