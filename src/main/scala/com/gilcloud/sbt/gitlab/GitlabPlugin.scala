@@ -107,8 +107,16 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
-        gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
-      }
+        gitlabProjectId.value.map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
+        gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _))
+      },
+      resolvers ++= gitlabProjectId.value.map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
+        gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _))
     )
+
+  private def gitlabProjectRepository(gitlabDomain: String, projectId: Int): MavenRepository =
+    "gitlab-maven" at s"https://$gitlabDomain/api/v4/projects/$projectId/packages/maven"
+
+  private def gitlabGroupRepository(gitlabDomain: String, groupId: Int): MavenRepository =
+    "gitlab-maven" at s"https://$gitlabDomain/api/v4/groups/$groupId/-/packages/maven"
 }
