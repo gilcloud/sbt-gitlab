@@ -2,15 +2,11 @@ package nl.zolotko.sbt.gitlab
 
 import lmcoursier.definitions.Authentication
 import okhttp3.OkHttpClient
-import org.apache.ivy.util.url.{
-  URLHandler,
-  URLHandlerDispatcher,
-  URLHandlerRegistry
-}
+import org.apache.ivy.util.url.{URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
 import sbt.Keys._
+import sbt._
 import sbt.internal.CustomHttp
 import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt._
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
@@ -77,7 +73,7 @@ object GitlabPlugin extends AutoPlugin {
     }
   }
 
-  val gitLabProjectSettings : Seq[Def.Setting[_]] =
+  val gitLabProjectSettings: Seq[Def.Setting[_]] =
     Seq(
       publishMavenStyle := true,
       gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
@@ -93,7 +89,7 @@ object GitlabPlugin extends AutoPlugin {
           .map(GitlabCredentials("Job-Token", _))
       },
       headerAuthHandler := {
-        val cred = gitlabCredentialsHandler.value
+        val cred   = gitlabCredentialsHandler.value
         val logger = streams.value.log
         val client = headerEnrichingClientBuilder(
           CustomHttp.okhttpClientBuilder.value,
@@ -111,8 +107,9 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value.map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
-        gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _))
+        gitlabProjectId.value
+          .map(gitlabProjectRepository(gitlabDomain.value, _)) orElse
+          gitlabGroupId.value.map(gitlabGroupRepository(gitlabDomain.value, _))
       },
       resolvers ++= gitlabProjectId.value
         .map(gitlabProjectRepository(gitlabDomain.value, _)) orElse

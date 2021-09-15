@@ -14,7 +14,10 @@ case class HeaderInjector(
   override def intercept(chain: Interceptor.Chain): Response = {
     val oldReq = chain.request()
     chain.proceed(
-      if (oldReq.url.host.contains(hostMatch) && Option(oldReq.headers.get(creds.key)).isEmpty) {
+      if (
+        oldReq.url.host
+          .contains(hostMatch) && Option(oldReq.headers.get(creds.key)).isEmpty
+      ) {
         logDebug(s"injecting gitlab token for $oldReq")
         val newReq =
           oldReq.newBuilder().addHeader(creds.key, creds.value).build()
