@@ -1,6 +1,6 @@
 name := "sbt-gitlab"
 organization := "com.gilcloud"
-version := "0.0.6"
+version := "0.0.7-SNAPSHOT"
 description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
 sbtPlugin := true
 
@@ -17,7 +17,7 @@ publishMavenStyle := false
 bintrayRepository := "sbt-plugins"
 bintrayOrganization := Some("gilcloud")
 
-initialCommands in console := "import com.gilcloud.sbt.gitlab._"
+console / initialCommands := "import com.gilcloud.sbt.gitlab._"
 
 enablePlugins(ScriptedPlugin)
 // set up 'scripted; sbt plugin for testing sbt plugins

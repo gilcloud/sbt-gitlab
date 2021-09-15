@@ -13,3 +13,4 @@ project/metals.sbt
 #vscode
 .vscode/
 
+.bsp/
