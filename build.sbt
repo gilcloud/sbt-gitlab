@@ -46,3 +46,5 @@ publishTo := sonatypePublishToBundle.value
 sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 sonatypeProfileName := "nl.zolotko.sbt"
+
+versionScheme := Some("semver-spec")
