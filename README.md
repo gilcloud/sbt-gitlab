@@ -42,7 +42,7 @@ gitlabProjectId := Some(12345)
 gitlabDomain := "my-gitlab-host.com"
 gitlabCredentials := Some(GitlabCredentials("Private-Token", "<ACCESS-TOKEN>"))
 
-// Alternatively for credential management 
+// Alternatively for credential management
 // ideal for pulling artifacts locally and keeping tokens out of your source control
 // see below for sample .credentials file
 credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
