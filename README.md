@@ -2,9 +2,11 @@
 
 GitLab dependency resolution and artifact publishing for sbt.
 
-## Usage
+## Requirements
 
 This plugin requires sbt 1.5.0+ as it relies on Coursier and sbt.internal.CustomHTTP
+
+## Usage
 
 Add the following to your project/plugins.sbt file:
 
