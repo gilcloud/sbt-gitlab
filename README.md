@@ -53,14 +53,14 @@ credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
 
 This plugin supports dependency resolution from GitLab package repositories by automatically adding a resolver based on `gitlabGroupId`/`gitlabProjectId` you provided:
 
-```
-show resolvers
+```sbt
+> show resolvers
 [info] * gitlab-maven: https://gitlab.your-company.com/api/v4/groups/13/-/packages/maven
 ```
 
 If necessary, you can add more resolvers manually, for example:
 
-```
+```sbt
 resolvers += "Another GitLab group repository" at "https://gitlab.your-company.com/api/v4/groups/42/-/packages/maven"
 ```
 
@@ -71,8 +71,8 @@ automatically pulls the following GitLab environment variables which should alwa
 Pipelines
 
 ```shell
-$CI_JOB_TOKEN   # Access Token to authorize read/writes to the gitlab package registry
-$CI_PROJECT_ID  # Project ID for active project pipeline. Used so Gitlab knows what project to publish the artifact under
+$CI_JOB_TOKEN   # Access Token to authorize read/writes to the GitLab package registry
+$CI_PROJECT_ID  # Project ID for active project pipeline. Used so GitLab knows what project to publish the artifact under
 $CI_GROUP_ID    # GitLab Group ID. Used for fetching Artifacts published under the specified Group. 
                 # In a pipeline this would be set to the id of the group the project is under (when applicable)
 $CI_SERVER_HOST # The host name for GitLab defaults to gitlab.com
