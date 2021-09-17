@@ -40,7 +40,7 @@ Or, keep them out of your source control:
 realm=gitlab
 host=gitlab.your-company.com
 user=Private-Token
-password=<API-KEY>
+password=<ACCESS-TOKEN>
 ```
 
 > build.sbt or ~/.sbt/1.0/credentials.sbt
