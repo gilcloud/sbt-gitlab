@@ -11,7 +11,42 @@ This plugin requires sbt 1.5.0+ as it relies on Coursier and sbt.internal.Custom
 Add the following to your project/plugins.sbt file:
 
 ```scala
+resolvers += "Sonatype OSS" at "https://s01.oss.sonatype.org/content/repositories/public"
 addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.7")
+```
+
+And then configure the plugin in your build.sbt file by overriding gitlabDomain (default is gitlab.com) and
+gitlabGroupId/gitlabProjectId, for example:
+
+```scala
+gitlabDomain := "gitlab.your-company.com"
+gitlabGroupId := Some(13)
+```
+
+### Credentials
+
+You can either put your credentials directly into build.sbt (not recommended):
+
+```scala
+import nl.zolotko.sbt.gitlab.GitlabCredentials
+gitlabCredentials := Some(GitlabCredentials("Private-Token", "<ACCESS-TOKEN>"))
+```
+
+Or, keep them out of your source control:
+
+> ~/.sbt/.credentials.gitlab
+
+```.credentials
+realm=gitlab
+host=my-git-lab-host
+user=Private-Token
+password=<API-KEY>
+```
+
+> build.sbt or ~/.sbt/1.0/credentials.sbt
+
+```scala 
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
 ```
 
 ### Dependency Resolution
@@ -30,31 +65,6 @@ $CI_PROJECT_ID  # Project ID for active project pipeline. Used so Gitlab knows w
 $CI_GROUP_ID    # Gitlab Group ID. Used for fetching Artifacts published under the specified Group. 
                 # In a pipeline this would be set to the id of the group the project is under (when applicable)
 $CI_SERVER_HOST # The host name for gitlab defaults to gitlab.com
-```
-
-Any of these 'defaults' can be overwritten in your build.sbt file
-
-```scala
-import nl.zolotko.sbt.gitlab.GitlabCredentials
-
-gitlabGroupId := Some(12345)
-gitlabProjectId := Some(12345)
-gitlabDomain := "my-gitlab-host.com"
-gitlabCredentials := Some(GitlabCredentials("Private-Token", "<ACCESS-TOKEN>"))
-
-// Alternatively for credential management
-// ideal for pulling artifacts locally and keeping tokens out of your source control
-// see below for sample .credentials file
-credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
-```
-
-> ~/.sbt/.credentials.gitlab
-
-```.credentials
-realm=gitlab
-host=my-git-lab-host
-user=Private-Token
-password=<API-KEY>
 ```
 
 ### Testing
