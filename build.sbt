@@ -1,8 +1,8 @@
-name := "sbt-gitlab"
+name         := "sbt-gitlab"
 organization := "nl.zolotko.sbt"
 
 description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
-sbtPlugin := true
+sbtPlugin   := true
 
 licenses := Seq(
   "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")
@@ -22,7 +22,7 @@ developers := List(
   )
 )
 startYear := Some(2020)
-homepage := scmInfo.value map (_.browseUrl)
+homepage  := scmInfo.value map (_.browseUrl)
 scmInfo := Some(
   ScmInfo(
     url("https://github.com/azolotko/sbt-gitlab"),

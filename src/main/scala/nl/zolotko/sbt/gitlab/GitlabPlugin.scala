@@ -76,7 +76,7 @@ object GitlabPlugin extends AutoPlugin {
   val gitLabProjectSettings: Seq[Def.Setting[_]] =
     Seq(
       publishMavenStyle := true,
-      gitlabDomain := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
+      gitlabDomain      := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId := sys.env
         .get("CI_PROJECT_ID")
         .flatMap(str => Try(str.toInt).toOption),
@@ -100,7 +100,7 @@ object GitlabPlugin extends AutoPlugin {
         val dispatcher = dispatcherForClient(client)
         URLHandlerRegistry.setDefault(dispatcher)
       },
-      update := update.dependsOn(headerAuthHandler).value,
+      update            := update.dependsOn(headerAuthHandler).value,
       updateClassifiers := updateClassifiers.dependsOn(headerAuthHandler).value,
       updateSbtClassifiers := updateSbtClassifiers
         .dependsOn(headerAuthHandler)
