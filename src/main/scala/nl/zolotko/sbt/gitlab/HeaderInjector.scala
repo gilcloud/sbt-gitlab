@@ -4,7 +4,7 @@ import okhttp3.{Interceptor, Response}
 import sbt.util.Logger
 
 case class HeaderInjector(
-    creds: GitlabCredentials,
+    credentials: GitlabCredentials,
     hostMatch: String,
     optLogger: Option[Logger] = None
 ) extends Interceptor {
@@ -14,13 +14,10 @@ case class HeaderInjector(
   override def intercept(chain: Interceptor.Chain): Response = {
     val oldReq = chain.request()
     chain.proceed(
-      if (
-        oldReq.url.host
-          .contains(hostMatch) && Option(oldReq.headers.get(creds.key)).isEmpty
-      ) {
+      if (oldReq.url.host.contains(hostMatch) && Option(oldReq.headers.get(credentials.key)).isEmpty) {
         logDebug(s"injecting gitlab token for $oldReq")
         val newReq =
-          oldReq.newBuilder().addHeader(creds.key, creds.value).build()
+          oldReq.newBuilder().addHeader(credentials.key, credentials.value).build()
         logDebug(newReq.toString)
         logDebug(newReq.headers().toString)
         newReq

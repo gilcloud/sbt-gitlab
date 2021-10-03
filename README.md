@@ -12,7 +12,7 @@ Add the following to your project/plugins.sbt file:
 
 ```scala
 resolvers += "Sonatype OSS" at "https://s01.oss.sonatype.org/content/repositories/public"
-addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.7")
+addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.8")
 ```
 
 You can configure the plugin in your build.sbt file by overriding `gitlabDomain` (default is `"gitlab.com"`), and optionally
@@ -20,7 +20,10 @@ You can configure the plugin in your build.sbt file by overriding `gitlabDomain`
 
 ```scala
 gitlabDomain := "gitlab.your-company.com"
-gitlabGroupId := Some(13)
+// optionally,
+gitlabProjectId := Some(GitlabProjectId("unicorn"))
+// or
+gitlabGroupId := Some(GitlabGroupId("ninjas"))
 ```
 
 ### Credentials
@@ -28,13 +31,12 @@ gitlabGroupId := Some(13)
 You can either put your credentials directly into build.sbt (not recommended):
 
 ```scala
-import nl.zolotko.sbt.gitlab.GitlabCredentials
-gitlabCredentials := Some(GitlabCredentials("Private-Token", "<ACCESS-TOKEN>"))
+gitlabCredentials := Some(GitlabCredentials(gitlabDomain.value, "Private-Token", "<ACCESS-TOKEN>"))
 ```
 
 Or, keep them out of your source control:
 
-> ~/.sbt/.credentials.gitlab
+> ~/.sbt/1.0/.credentials
 
 ```.credentials
 realm=gitlab
@@ -46,22 +48,18 @@ password=<ACCESS-TOKEN>
 > build.sbt or ~/.sbt/1.0/credentials.sbt
 
 ```scala 
-credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
+DefaultOptions.addCredentials
 ```
 
 ### Dependency Resolution
 
-This plugin supports dependency resolution from GitLab package repositories by automatically adding a resolver based on `gitlabGroupId`/`gitlabProjectId` you provided:
+This plugin supports dependency resolution from multiple GitLab package repositories:
 
 ```sbt
-> show resolvers
-[info] * gitlab-maven: https://gitlab.your-company.com/api/v4/groups/13/-/packages/maven
-```
-
-If necessary, you can add more resolvers manually, for example:
-
-```sbt
-resolvers += "Another GitLab group repository" at "https://gitlab.your-company.com/api/v4/groups/42/-/packages/maven"
+gitlabRepositories ++= Seq(
+  GitlabProjectRepository(gitlabDomain.value, GitlabProjectId("unicorn")),
+  GitlabGroupRepository(gitlabDomain.value, GitlabGroupId("ninjas"))
+)
 ```
 
 ### Publishing to GitLab via GitLab CI/CD

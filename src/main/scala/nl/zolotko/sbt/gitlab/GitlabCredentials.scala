@@ -2,7 +2,7 @@ package nl.zolotko.sbt.gitlab
 
 import sbt.DirectCredentials
 
-case class GitlabCredentials(key: String, value: String)
+case class GitlabCredentials(domain: String, key: String, value: String)
 
 object GitlabCredentials {
 
@@ -13,6 +13,6 @@ object GitlabCredentials {
     *   GitlabCredentials
     */
   def apply(directCredentials: DirectCredentials): GitlabCredentials =
-    GitlabCredentials(directCredentials.userName, directCredentials.passwd)
+    GitlabCredentials(directCredentials.host, directCredentials.userName, directCredentials.passwd)
 
 }
