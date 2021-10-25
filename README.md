@@ -11,7 +11,6 @@ This plugin requires sbt 1.5.0+ as it relies on Coursier and sbt.internal.Custom
 Add the following to your project/plugins.sbt file:
 
 ```scala
-resolvers += "Sonatype OSS" at "https://s01.oss.sonatype.org/content/repositories/public"
 addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.8")
 ```
 
