@@ -49,10 +49,6 @@ object GitlabPlugin extends AutoPlugin {
       "GitLab project ID."
     )
 
-    val gitlabGroupId = settingKey[Option[GitlabGroupId]](
-      "GitLab group ID."
-    )
-
     val gitlabCredentials = settingKey[Option[GitlabCredentials]]("GitLab credentials.")
 
     val gitlabDomain = settingKey[String]("Domain for GitLab override if privately hosted repo.")
@@ -116,7 +112,6 @@ object GitlabPlugin extends AutoPlugin {
       publishMavenStyle := true,
       gitlabDomain      := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
       gitlabProjectId   := sys.env.get("CI_PROJECT_ID").map(GitlabProjectId.apply),
-      gitlabGroupId     := sys.env.get("CI_GROUP_ID").map(GitlabGroupId.apply),
       gitlabCredentials := sys.env
         .get("CI_JOB_TOKEN")
         .map(GitlabCredentials(gitlabDomain.value, "Job-Token", _)),
@@ -142,11 +137,6 @@ object GitlabPlugin extends AutoPlugin {
         gitlabProjectId.value
           .map(
             GitlabProjectRepository(gitlabDomain.value, _).resolver
-          )
-          .orElse(
-            gitlabGroupId.value.map(
-              GitlabGroupRepository(gitlabDomain.value, _).resolver
-            )
           )
       ),
       gitlabRepositories := Seq.empty,
