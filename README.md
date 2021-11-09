@@ -14,13 +14,10 @@ Add the following to your project/plugins.sbt file:
 addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.9")
 ```
 
-You can configure the plugin in your build.sbt file by overriding `gitlabDomain` (default is `"gitlab.com"`), and optionally
-`gitlabProjectId`, for example:
+You can configure the plugin in your build.sbt file by overriding `gitlabDomain` (default is `"gitlab.com"`):
 
 ```scala
 gitlabDomain := "gitlab.your-company.com"
-// optionally
-gitlabProjectId := Some(GitlabProjectId("unicorn"))
 ```
 
 ### Credentials

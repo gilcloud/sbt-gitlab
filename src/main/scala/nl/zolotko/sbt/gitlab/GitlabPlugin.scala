@@ -107,11 +107,12 @@ object GitlabPlugin extends AutoPlugin {
         )
     }
 
-  private lazy val gitlabProjectSettings: Seq[Def.Setting[_]] =
+  private lazy val gitlabProjectSettings: Seq[Def.Setting[_]] = {
+    val gitlabProjectId = sys.env.get("CI_PROJECT_ID").map(GitlabProjectId.apply)
+
     Seq(
       publishMavenStyle := true,
       gitlabDomain      := sys.env.getOrElse("CI_SERVER_HOST", "gitlab.com"),
-      gitlabProjectId   := sys.env.get("CI_PROJECT_ID").map(GitlabProjectId.apply),
       gitlabCredentials := sys.env
         .get("CI_JOB_TOKEN")
         .map(GitlabCredentials(gitlabDomain.value, "Job-Token", _)),
@@ -134,7 +135,7 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(gitlabHeaderAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse(
-        gitlabProjectId.value
+        gitlabProjectId
           .map(
             GitlabProjectRepository(gitlabDomain.value, _).resolver
           )
@@ -157,4 +158,5 @@ object GitlabPlugin extends AutoPlugin {
         allGitlabCredentials.value
       )
     )
+  }
 }
