@@ -62,11 +62,11 @@ object GitlabPlugin extends AutoPlugin {
       existingBuilder: OkHttpClient.Builder,
       domain: String,
       credentials: Seq[GitlabCredentials],
-      logger: Option[Logger] = None
+      logger: Logger
   ): OkHttpClient.Builder =
     credentials.find(_.domain == domain) match {
       case Some(credentials) =>
-        logger.foreach(_.debug("building a custom HTTP client for GitLab"))
+        logger.debug("building a custom HTTP client for GitLab")
         existingBuilder
           .addNetworkInterceptor(HeaderInjector(credentials, domain, logger))
       case None =>
@@ -123,7 +123,7 @@ object GitlabPlugin extends AutoPlugin {
           CustomHttp.okhttpClientBuilder.value,
           gitlabDomain.value,
           credentials,
-          Some(logger)
+          logger
         ).build()
         val dispatcher = dispatcherForClient(client)
         URLHandlerRegistry.setDefault(dispatcher)

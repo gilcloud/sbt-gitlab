@@ -36,6 +36,8 @@ enablePlugins(SbtPlugin)
 
 scriptedBufferLog := false
 
+scalacOptions += "-target:jvm-1.8"
+
 scriptedLaunchOpts := (
   scriptedLaunchOpts.value ++
     Seq("-Xmx1g", "-Dsbt.gitlab.version=" + version.value)
