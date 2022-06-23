@@ -1,5 +1,6 @@
 package nl.zolotko.sbt.gitlab
 
+import java.net.URLEncoder
 import lmcoursier.CoursierConfiguration
 import lmcoursier.definitions.Authentication
 import okhttp3.OkHttpClient
@@ -18,6 +19,10 @@ object GitlabPlugin extends AutoPlugin {
 
   object autoImport {
     case class GitlabProjectId(id: String)
+    object GitlabProjectId {
+      def apply(namespace: String, projectPath: String): GitlabProjectId =
+        GitlabProjectId(URLEncoder.encode(s"$namespace/$projectPath", "utf-8"))
+    }
     case class GitlabGroupId(id: String)
 
     sealed trait GitlabRepository {
