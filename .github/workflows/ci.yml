@@ -36,7 +36,7 @@ jobs:
         include:
           - { sbt: latest,  java: 8 }
           - { sbt: latest,  java: 11 }
-          - { sbt: latest,  java: 16 }
+          - { sbt: latest,  java: 17 }
       fail-fast: false
     name: test (java ${{ matrix.java }}, sbt ${{ matrix.sbt }})
     steps:
