@@ -11,7 +11,7 @@ This plugin requires sbt 1.5.0+ as it relies on Coursier and sbt.internal.Custom
 Add the following to your project/plugins.sbt file:
 
 ```scala
-addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.0.9")
+addSbtPlugin("nl.zolotko.sbt" % "sbt-gitlab" % "0.1.0")
 ```
 
 You can configure the plugin in your build.sbt file by overriding `gitlabDomain` (default is `"gitlab.com"`):
