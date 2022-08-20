@@ -1,14 +1,13 @@
 package nl.zolotko.sbt.gitlab
 
-import java.net.URLEncoder
 import lmcoursier.CoursierConfiguration
 import lmcoursier.definitions.Authentication
-import okhttp3.OkHttpClient
-import org.apache.ivy.util.url.{URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
-import sbt.Keys._
-import sbt.internal.CustomHttp
-import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt.{Credentials, Def, settingKey, _}
+import org.apache.ivy.util.url.{GitlabURLHandler, URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
+import sbt.*
+import sbt.Keys.*
+
+import java.net.URLEncoder
+
 object GitlabPlugin extends AutoPlugin {
 
   // This plugin will load automatically
@@ -61,29 +60,7 @@ object GitlabPlugin extends AutoPlugin {
     val gitlabRepositories =
       settingKey[Seq[GitlabRepository]]("GitLab repositories for automatically managed dependencies.")
   }
-  import autoImport._
-
-  private def headerEnrichingClientBuilder(
-      existingBuilder: OkHttpClient.Builder,
-      domain: String,
-      credentials: Seq[GitlabCredentials],
-      logger: Logger
-  ): OkHttpClient.Builder =
-    credentials.find(_.domain == domain) match {
-      case Some(credentials) =>
-        logger.debug("building a custom HTTP client for GitLab")
-        existingBuilder
-          .addNetworkInterceptor(HeaderInjector(credentials, domain, logger))
-      case None =>
-        existingBuilder
-    }
-
-  private def dispatcherForClient(client: OkHttpClient): URLHandlerDispatcher =
-    new URLHandlerDispatcher {
-      Seq("http", "https").foreach(super.setDownloader(_, new GigahorseUrlHandler(client)))
-
-      override def setDownloader(protocol: String, downloader: URLHandler): Unit = ()
-    }
+  import autoImport.*
 
   private lazy val gitlabHeaderAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
@@ -122,16 +99,15 @@ object GitlabPlugin extends AutoPlugin {
         .get("CI_JOB_TOKEN")
         .map(GitlabCredentials(gitlabDomain.value, "Job-Token", _)),
       gitlabHeaderAuthHandler := {
-        val credentials = allGitlabCredentials.value
-        val logger      = streams.value.log
-        val client = headerEnrichingClientBuilder(
-          CustomHttp.okhttpClientBuilder.value,
-          gitlabDomain.value,
-          credentials,
-          logger
-        ).build()
-        val dispatcher = dispatcherForClient(client)
-        URLHandlerRegistry.setDefault(dispatcher)
+        val downloader = new GitlabURLHandler(allGitlabCredentials.value)
+
+        URLHandlerRegistry.setDefault(
+          new URLHandlerDispatcher {
+            Seq("http", "https").foreach(super.setDownloader(_, downloader))
+
+            override def setDownloader(protocol: String, downloader: URLHandler): Unit = ()
+          }
+        )
       },
       update            := update.dependsOn(gitlabHeaderAuthHandler).value,
       updateClassifiers := updateClassifiers.dependsOn(gitlabHeaderAuthHandler).value,
