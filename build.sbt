@@ -1,6 +1,6 @@
 name := "sbt-gitlab"
 organization := "com.gilcloud"
-version := "0.0.6"
+version := "0.0.7"
 description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
 sbtPlugin := true
 

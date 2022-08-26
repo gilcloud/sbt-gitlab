@@ -1,15 +1,13 @@
 package com.gilcloud.sbt.gitlab
 
-import okhttp3.OkHttpClient
-import org.apache.ivy.util.url.{
-  URLHandler,
-  URLHandlerDispatcher,
-  URLHandlerRegistry
-}
-import sbt.Keys._
-import sbt.internal.CustomHttp
-import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt._
+//import okhttp3.OkHttpClient
+import gigahorse.SignatureCalculator
+import gigahorse.shaded.apache.org.apache.http.HttpHost
+import org.apache.ivy.util.url.{URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
+import sbt.Keys.*
+import sbt.*
+import sbt.librarymanagement.Http.http
+import gigahorse.support.apachehttp.ApacheHttpClient
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
@@ -18,6 +16,9 @@ object GitlabPlugin extends AutoPlugin {
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
 
+//  def defaultHttpClientBuilder: OkHttpClient.Builder = {
+//    CustomHttp.defaultHttpClientBuilder
+//  }
   // This plugin will load automatically
   override def trigger: PluginTrigger = allRequirements
 
@@ -35,25 +36,25 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  def headerEnrichingClientBuilder(
-      existingBuilder: OkHttpClient.Builder,
-      domain: String,
-      optCreds: Option[GitlabCredentials],
-      optLogger: Option[Logger] = None
-  ): OkHttpClient.Builder =
-    optCreds match {
-      case Some(credentials) =>
-        optLogger.foreach(_.debug("building gitlab custom http client"))
-        existingBuilder
-          .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
-      case None =>
-        existingBuilder
-    }
+//  def headerEnrichingClientBuilder(
+//      existingBuilder: OkHttpClient.Builder,
+//      domain: String,
+//      optCreds: Option[GitlabCredentials],
+//      optLogger: Option[Logger] = None
+//  ): OkHttpClient.Builder =
+//    optCreds match {
+//      case Some(credentials) =>
+//        optLogger.foreach(_.debug("building gitlab custom http client"))
+//        existingBuilder
+//          .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
+//      case None =>
+//        existingBuilder
+//    }
 
-  def dispatcherForClient(client: OkHttpClient): URLHandlerDispatcher =
+  def dispatcherForClient(creds: GitlabCredentials): URLHandlerDispatcher =
     new URLHandlerDispatcher {
       Seq("http", "https") foreach {
-        super.setDownloader(_, new GigahorseUrlHandler(client))
+        super.setDownloader(_, GitlabUrlHandler(creds))
       }
 
       override def setDownloader(
@@ -61,9 +62,10 @@ object GitlabPlugin extends AutoPlugin {
           downloader: URLHandler
       ): Unit = {}
     }
-  
+
   override def projectSettings: Seq[Def.Setting[_]] =
     inScope(publish.scopedKey.scope)(gitLabProjectSettings)
+
 
   val gitLabProjectSettings : Seq[Def.Setting[_]] = 
     Seq(
@@ -88,16 +90,11 @@ object GitlabPlugin extends AutoPlugin {
               case _                  => true
             })
             .find(_.realm == "gitlab")
-            .map { GitlabCredentials(_) }
+            .map{GitlabCredentials(_)}
         }
         val logger = streams.value.log
-        val client = headerEnrichingClientBuilder(
-          CustomHttp.okhttpClientBuilder.value,
-          gitlabDomain.value,
-          cred,
-          Some(logger)
-        ).build()
-        val dispatcher = dispatcherForClient(client)
+
+        val dispatcher = dispatcherForClient(cred.get)
         URLHandlerRegistry.setDefault(dispatcher)
       },
       update := update.dependsOn(headerAuthHandler).value,
