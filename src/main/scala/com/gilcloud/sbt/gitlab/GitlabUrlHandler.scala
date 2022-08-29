@@ -15,7 +15,7 @@ import scala.jdk.CollectionConverters._
 // Implementation of the methods below are copied directly from the BasicURL Handler
 // Modifications were made to the getUrlInfo, download, and upload functions
 // to add gitlab credentials to the header of the request's when the domain matches
-case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHandler {
+case class GitlabUrlHandler(gitlabHost: String, credentials: GitlabCredentials) extends BasicURLHandler {
   private val BUFFER_SIZE = 64 * 1024
   private val ERROR_BODY_TRUNCATE_LEN = 512
 
@@ -154,7 +154,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       con.setRequestProperty("User-Agent", "Apache Ivy/" + Ivy.getIvyVersion)
 
       // Check host against gitlab host. If they match add the creds to the header
-      if (url.getHost.startsWith(credentials.host)) {
+      if (url.getHost.startsWith(gitlabHost)) {
         con.setRequestProperty(credentials.key, credentials.value)
       }
 
@@ -197,7 +197,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       srcConn.setRequestProperty("Accept", "application/octet-stream, application/json, application/xml, */*")
 
       // Check host against gitlab host. If they match add the creds to the header
-      if (src.getHost.startsWith(credentials.host)) {
+      if (src.getHost.startsWith(gitlabHost)) {
         srcConn.setRequestProperty(credentials.key, credentials.value)
       }
 
@@ -248,7 +248,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       conn.setRequestProperty("Content-length", source.length().toString)
 
       // Check host against gitlab host. If they match add the creds to the header
-      if (dest.getHost.startsWith(credentials.host)) {
+      if (dest.getHost.startsWith(gitlabHost)) {
         conn.setRequestProperty(credentials.key, credentials.value)
       }
 

@@ -28,10 +28,10 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  def gitlabUrlHandlerDispatcher(creds: GitlabCredentials): URLHandlerDispatcher =
+  def gitlabUrlHandlerDispatcher(gitlabDomain: String, creds: GitlabCredentials): URLHandlerDispatcher =
     new URLHandlerDispatcher {
       Seq("http", "https") foreach {
-        super.setDownloader(_, GitlabUrlHandler(creds))
+        super.setDownloader(_, GitlabUrlHandler(gitlabDomain,creds))
       }
       override def setDownloader(
           protocol: String,
@@ -56,7 +56,7 @@ object GitlabPlugin extends AutoPlugin {
       gitlabCredentials := {
         sys.env
           .get("CI_JOB_TOKEN")
-          .map(GitlabCredentials(gitlabDomain.value, "Job-Token", _))
+          .map(GitlabCredentials("Job-Token", _))
       },
       headerAuthHandler := {
         val cred = gitlabCredentials.value.orElse {
@@ -66,10 +66,10 @@ object GitlabPlugin extends AutoPlugin {
               case _                  => true
             })
             .find(_.realm == "gitlab")
-            .map{GitlabCredentials(gitlabDomain.value,_)}
+            .map{GitlabCredentials(_)}
         }
 
-        val dispatcher = gitlabUrlHandlerDispatcher(cred.get)
+        val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value,cred.get)
         URLHandlerRegistry.setDefault(dispatcher)
       },
       update := update.dependsOn(headerAuthHandler).value,
