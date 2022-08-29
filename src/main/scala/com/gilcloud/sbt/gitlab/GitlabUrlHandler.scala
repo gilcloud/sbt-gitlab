@@ -1,34 +1,20 @@
 package com.gilcloud.sbt.gitlab
 
-//import coursier.core.Versions.DateTime
-//import gigahorse.FullResponse
-//import gigahorse.support.apachehttp.{ApacheHttpClient, Gigahorse}
 import org.apache.ivy.Ivy
-import org.apache.ivy.util.FileUtil
-import org.apache.ivy.util.url.BasicURLHandler.{HttpStatus, getCharSetFromContentType}
-import org.apache.ivy.util.url.URLHandler
+import org.apache.ivy.util.{ CopyProgressListener, Message, FileUtil}
+import org.apache.ivy.util.url.{ BasicURLHandler, IvyAuthenticator, URLHandler }
+import org.apache.ivy.util.url.URLHandler.{ URLInfo, UNAVAILABLE }
 
-import java.net.URLDecoder
-//import sbt.internal.librarymanagement.ivyint.ErrorMessageAuthenticator
-//import sbt.librarymanagement.Http.http
-
-import java.net.{HttpURLConnection, URL, URLConnection, UnknownHostException}
+import java.net.{HttpURLConnection, URL, URLConnection, URLDecoder, UnknownHostException}
 import java.io.*
 import java.util
 import scala.collection.mutable
-//import scala.util.control.NonFatal
+import scala.jdk.CollectionConverters._
 
-//import okhttp3.{ MediaType, Request, RequestBody }
-//import okhttp3.internal.http.HttpDate
-//
-//import okhttp3.{ JavaNetAuthenticator => _, _ }
-//import okio._
 
-import org.apache.ivy.util.{ CopyProgressEvent, CopyProgressListener, Message }
-import org.apache.ivy.util.url.{ AbstractURLHandler, BasicURLHandler, IvyAuthenticator, URLHandler }
-import org.apache.ivy.util.url.URLHandler._
-import sbt.io.IO
-
+// Implementation of the methods below are copied directly from the BasicURL Handler
+// Modifications were made to the getUrlInfo, download, and upload functions
+// to add gitlab credentials to the header of the request's when the domain matches
 case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHandler {
   private val BUFFER_SIZE = 64 * 1024
   private val ERROR_BODY_TRUNCATE_LEN = 512
@@ -54,8 +40,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
   private def getHeadersAsDebugString(headers: util.Map[String, util.List[String]]) = {
     val builder = new mutable.StringBuilder("")
     if (headers != null) {
-      import scala.collection.JavaConversions._
-      for (header <- headers.entrySet) {
+      for (header <- headers.entrySet.asScala) {
         val key = header.getKey
         if (key != null) {
           builder.append(header.getKey)
@@ -123,7 +108,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
   @throws[IOException]
   private def readTruncated(is: InputStream, maxLen: Int, contentType: String, contentEncoding: String) = {
     val decodingStream = getDecodingInputStream(contentEncoding, is)
-    val charSet = getCharSetFromContentType(contentType)
+    val charSet = BasicURLHandler.getCharSetFromContentType(contentType)
     val os = new ByteArrayOutputStream(maxLen)
     try {
       var count = 0
@@ -156,8 +141,9 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
     else if (String.valueOf(status).startsWith("5")) Message.error("SERVER ERROR: " + con.getResponseMessage + " url=" + url)
     false
   }
+
   override def getURLInfo(url0: URL, timeout: Int): URLInfo = {
-    println(s"getUrlInfo for $url0 timeout $timeout") // Install the IvyAuthenticator
+    // Install the IvyAuthenticator
     if ("http" == url0.getProtocol || "https" == url0.getProtocol) IvyAuthenticator.install()
 
     var con: URLConnection = null
@@ -166,12 +152,17 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       val url = normalizeToURL(url0)
       con = url.openConnection
       con.setRequestProperty("User-Agent", "Apache Ivy/" + Ivy.getIvyVersion)
-      con.setRequestProperty(credentials.key, credentials.value)
+
+      // Check host against gitlab host. If they match add the creds to the header
+      if (url.getHost.startsWith(credentials.host)) {
+        con.setRequestProperty(credentials.key, credentials.value)
+      }
+
       if (con.isInstanceOf[HttpURLConnection]) {
         val httpCon = con.asInstanceOf[HttpURLConnection]
         if (getRequestMethod == URLHandler.REQUEST_METHOD_HEAD) httpCon.setRequestMethod("HEAD")
         if (checkStatusCode(url, httpCon)) {
-          val bodyCharset = getCharSetFromContentType(con.getContentType)
+          val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
           return new SbtUrlInfo(true, httpCon.getContentLength, con.getLastModified, bodyCharset)
         }
       }
@@ -179,7 +170,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
         val contentLength = con.getContentLength
         if (contentLength <= 0) return UNAVAILABLE
         else { // TODO: not HTTP... maybe we *don't* want to default to ISO-8559-1 here?
-          val bodyCharset = getCharSetFromContentType(con.getContentType)
+          val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
           return new SbtUrlInfo(true, contentLength, con.getLastModified, bodyCharset)
         }
       }
@@ -190,10 +181,10 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       case e: IOException =>
         Message.error("Server access Error: " + e.getMessage + " url=" + url0)
     } finally disconnect(con)
-    return UNAVAILABLE
+    UNAVAILABLE
   }
+
   override def download(src0: URL, dest: File, l: CopyProgressListener): Unit = {
-    println(s"Download request from $src0")
     // Install the IvyAuthenticator
     if ("http" == src0.getProtocol || "https" == src0.getProtocol) IvyAuthenticator.install()
 
@@ -204,7 +195,12 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       srcConn.setRequestProperty("User-Agent", "Apache Ivy/" + Ivy.getIvyVersion)
       srcConn.setRequestProperty("Accept-Encoding", "gzip,deflate")
       srcConn.setRequestProperty("Accept", "application/octet-stream, application/json, application/xml, */*")
-      srcConn.setRequestProperty(credentials.key, credentials.value)
+
+      // Check host against gitlab host. If they match add the creds to the header
+      if (src.getHost.startsWith(credentials.host)) {
+        srcConn.setRequestProperty(credentials.key, credentials.value)
+      }
+
       if (srcConn.isInstanceOf[HttpURLConnection]) {
         val httpCon = srcConn.asInstanceOf[HttpURLConnection]
         val status = httpCon.getResponseCode
@@ -243,7 +239,6 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
     var conn: HttpURLConnection = null
     val dest = normalizeToURL(dest0)
     try {
-
       conn = dest.openConnection.asInstanceOf[HttpURLConnection]
       conn.setDoOutput(true)
       conn.setRequestMethod("PUT")
@@ -251,15 +246,20 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       conn.setRequestProperty("Accept", "application/octet-stream, application/json, application/xml, */*")
       conn.setRequestProperty("Content-type", "application/octet-stream")
       conn.setRequestProperty("Content-length", source.length().toString)
-      conn.setRequestProperty(credentials.key, credentials.value)
+
+      // Check host against gitlab host. If they match add the creds to the header
+      if (dest.getHost.startsWith(credentials.host)) {
+        conn.setRequestProperty(credentials.key, credentials.value)
+      }
+
       conn.setInstanceFollowRedirects(true)
       Message.debug("Request Headers:" + getHeadersAsDebugString(conn.getRequestProperties))
-      val in = new FileInputStream(source)
-      val os = conn.getOutputStream
-      FileUtil.copy(in, os, l)
-      in.close()
-
-      val i = 1
+      var in: FileInputStream = null
+      try {
+        in = new FileInputStream(source)
+        val os = conn.getOutputStream
+        FileUtil.copy(in, os, l)
+      } finally try in.close() catch { case e: IOException => Unit /* ignored */ }
       // initiate the connection
       val responseCode = conn.getResponseCode
       var extra = ""
@@ -272,11 +272,7 @@ case class GitlabUrlHandler(credentials: GitlabCredentials) extends BasicURLHand
       }
       Message.debug("Response Headers:" + getHeadersAsDebugString(conn.getHeaderFields))
       validatePutStatusCode(dest, responseCode, conn.getResponseMessage + extra)
-    } catch {
-      case e: IOException =>
-
-      /* ignored */
-    } finally disconnect(conn)
+    } catch { case e: IOException => Unit /* ignored */ } finally disconnect(conn)
   }
 }
 

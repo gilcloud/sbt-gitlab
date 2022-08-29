@@ -2,7 +2,7 @@ package com.gilcloud.sbt.gitlab
 
 import sbt.DirectCredentials
 
-case class GitlabCredentials(key: String, value: String)
+case class GitlabCredentials(host: String, key: String, value: String)
 
 object GitlabCredentials {
 
@@ -11,7 +11,7 @@ object GitlabCredentials {
     * @param directCredentials credentials class
     * @return GitlabCredentials
     */
-  def apply(directCredentials: DirectCredentials): GitlabCredentials =
-    GitlabCredentials(directCredentials.userName, directCredentials.passwd)
+  def apply(host:String, directCredentials: DirectCredentials): GitlabCredentials =
+    GitlabCredentials(host, directCredentials.userName, directCredentials.passwd)
 
 }

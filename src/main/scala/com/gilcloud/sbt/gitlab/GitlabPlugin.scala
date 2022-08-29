@@ -1,13 +1,8 @@
 package com.gilcloud.sbt.gitlab
 
-//import okhttp3.OkHttpClient
-import gigahorse.SignatureCalculator
-import gigahorse.shaded.apache.org.apache.http.HttpHost
 import org.apache.ivy.util.url.{URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
 import sbt.Keys.*
 import sbt.*
-import sbt.librarymanagement.Http.http
-import gigahorse.support.apachehttp.ApacheHttpClient
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
@@ -16,9 +11,6 @@ object GitlabPlugin extends AutoPlugin {
   lazy val headerAuthHandler =
     taskKey[Unit]("perform auth using header credentials")
 
-//  def defaultHttpClientBuilder: OkHttpClient.Builder = {
-//    CustomHttp.defaultHttpClientBuilder
-//  }
   // This plugin will load automatically
   override def trigger: PluginTrigger = allRequirements
 
@@ -36,27 +28,11 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-//  def headerEnrichingClientBuilder(
-//      existingBuilder: OkHttpClient.Builder,
-//      domain: String,
-//      optCreds: Option[GitlabCredentials],
-//      optLogger: Option[Logger] = None
-//  ): OkHttpClient.Builder =
-//    optCreds match {
-//      case Some(credentials) =>
-//        optLogger.foreach(_.debug("building gitlab custom http client"))
-//        existingBuilder
-//          .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
-//      case None =>
-//        existingBuilder
-//    }
-
-  def dispatcherForClient(creds: GitlabCredentials): URLHandlerDispatcher =
+  def gitlabUrlHandlerDispatcher(creds: GitlabCredentials): URLHandlerDispatcher =
     new URLHandlerDispatcher {
       Seq("http", "https") foreach {
         super.setDownloader(_, GitlabUrlHandler(creds))
       }
-
       override def setDownloader(
           protocol: String,
           downloader: URLHandler
@@ -80,7 +56,7 @@ object GitlabPlugin extends AutoPlugin {
       gitlabCredentials := {
         sys.env
           .get("CI_JOB_TOKEN")
-          .map(GitlabCredentials("Job-Token", _))
+          .map(GitlabCredentials(gitlabDomain.value, "Job-Token", _))
       },
       headerAuthHandler := {
         val cred = gitlabCredentials.value.orElse {
@@ -90,11 +66,10 @@ object GitlabPlugin extends AutoPlugin {
               case _                  => true
             })
             .find(_.realm == "gitlab")
-            .map{GitlabCredentials(_)}
+            .map{GitlabCredentials(gitlabDomain.value,_)}
         }
-        val logger = streams.value.log
 
-        val dispatcher = dispatcherForClient(cred.get)
+        val dispatcher = gitlabUrlHandlerDispatcher(cred.get)
         URLHandlerRegistry.setDefault(dispatcher)
       },
       update := update.dependsOn(headerAuthHandler).value,
