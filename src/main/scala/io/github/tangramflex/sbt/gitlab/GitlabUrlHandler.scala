@@ -1,4 +1,4 @@
-package com.gilcloud.sbt.gitlab
+package io.github.tangramflex.sbt.gitlab
 
 import org.apache.ivy.Ivy
 import org.apache.ivy.util.{ CopyProgressListener, Message, FileUtil}

@@ -1,19 +1,10 @@
-name: Scala CI
-
+name: CI
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
-
-permissions:
-  contents: read
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK 17
@@ -22,5 +13,5 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run tests
-      run: sbt test
+    - name: Build sbt-plugin
+      run: sbt compile

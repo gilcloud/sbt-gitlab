@@ -1,4 +1,4 @@
-package com.gilcloud.sbt.gitlab
+package io.github.tangramflex.sbt.gitlab
 
 import sbt.DirectCredentials
 

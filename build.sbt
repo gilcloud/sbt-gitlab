@@ -1,25 +1,27 @@
-name := "sbt-gitlab"
-organization := "com.gilcloud"
-version := "0.0.7"
-description := "publishing and dependency resolution for gitlab both private and hosted using header auth"
-sbtPlugin := true
-
-licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
-developers := List(Developer("gilandose", "Richard Gilmore", "richard.gilmore  gmail com", url("http://gilcloud.com/")))
-startYear := Some(2020)
-homepage := scmInfo.value map (_.browseUrl)
-scmInfo := Some(ScmInfo(url("https://github.com/gilcloud/sbt-gitlab"), "scm:git:git@github.com:gilcloud/sbt-gitlab.git"))
 
 
-bintrayPackageLabels := Seq("sbt", "plugin")
-bintrayVcsUrl := Some("https://github.com/gilcloud/sbt-gitlab.git")
-publishMavenStyle := false
-bintrayRepository := "sbt-plugins"
-bintrayOrganization := Some("gilcloud")
+inThisBuild(List(
+  organization := "io.github.tangramflex",
+  homepage     := Some(url("https://github.com/TangramFlex/sbt-gitlab")),
+  licenses     := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  description  := "publishing and dependency resolution for gitlab both private and hosted using header auth",
+  developers   := 
+    Developer("gilandose", "Richard Gilmore", "richard.gilmore  gmail com", url("http://gilcloud.com/"))
+    :: Developer("listba", "Ben List", "benjamin.list tangramflex com", url("https://github.com/listba/")) 
+    :: Nil,
+  sonatypeCredentialHost := "s01.oss.sonatype.org",
+  sonatypeRepository     := "https://s01.oss.sonatype.org/service/local",
+))
 
-initialCommands in console := "import com.gilcloud.sbt.gitlab._"
 
-enablePlugins(ScriptedPlugin)
-// set up 'scripted; sbt plugin for testing sbt plugins
-scriptedLaunchOpts ++=
-  Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+lazy val root = (project in file("."))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    name := "sbt-gitlab",
+    console / initialCommands := "import io.github.tangramflex.sbt.gitlab._",
+    pluginCrossBuild / sbtVersion := {
+      scalaBinaryVersion.value match {
+        case "2.12" => "1.5.0" // set minimum sbt version
+      }
+    }
+  )
