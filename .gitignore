@@ -5,7 +5,7 @@ project/project/
 .metals/
 .bloop/
 project/metals.sbt
-
+.bsp/
 
 # Intellij
 .idea/
