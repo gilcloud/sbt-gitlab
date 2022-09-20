@@ -3,7 +3,7 @@
 Gitlab dependency resolution and artifact publishing for sbt
 
 ```scala
-addSbtPlugin("io.github.tangram-flex" % "sbt-gitlab" % "0.0.6") // in your project/plugins.sbt file
+addSbtPlugin("io.github.tangram-flex" % "sbt-gitlab" % "0.0.7") // in your project/plugins.sbt file
 ```
 
 
@@ -22,7 +22,7 @@ ThisBuild / useCoursier := false
 Utilizing the sbt publish command within GitLab CI/CD should require no additional configuration. This plugin automatically pulls the following GitLab environment variables which should always be provided by default within GitLab Pipelines
 
 ```shell
-$CI_JOB_TOKEN   # Access Token to authorize read/writes to the gitlab pakcage registry
+$CI_JOB_TOKEN   # Access Token to authorize read/writes to the gitlab package registry
 $CI_PROJECT_ID  # Project ID for active project pipeline. Used so Gitlab knows what project to publish the artifact under
 $CI_GROUP_ID    # Gitlab Groupt ID. Used for fetching Artifacts published under the specified Group. 
                 # In a pipeline this would be set to the id of the group the project is under (when applicable)
@@ -39,7 +39,7 @@ GitlabPlugin.autoImport.gitlabProjectId   :=  Some(12345)
 GitlabPlugin.autoImport.gitlabDomain      :=  "my-gitlab-host.com"
 GitlabPlugin.autoImport.gitlabCredentials :=  Some(GitlabCredentials("Private-Token","<API-KEY>"))
 
-// Alternatively for credential managment 
+// Alternatively for credential management 
 // ideal for pulling artifacts locally and keeping tokens out of your source control
 // see below for sample .credentials file
 credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab"),
@@ -61,3 +61,8 @@ Run `scripted` for [sbt script tests](http://www.scala-sbt.org/1.x/docs/Testing-
 
 ### Publishing
 
+We rely on github actions & the [sbt-ci-release](https://github.com/sbt/sbt-ci-release) plugin to manage versioning & publishing to Sonatype OSS. See the documentation if you wish to learn more about the configuration.
+
+
+Additionally if you wish to know more about Sonatype OSS there is some good information here:
+    https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html
