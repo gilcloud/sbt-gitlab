@@ -57,7 +57,7 @@ object GitlabPlugin extends AutoPlugin {
         .map {
           GitlabCredentials(_)
         }
-    }.get
+    }
   }
 
   private def projectRepo(domain: String, projectId: Int): MavenRepository =
@@ -83,7 +83,7 @@ object GitlabPlugin extends AutoPlugin {
       },
       headerAuthHandler := {
         val cred = gitlabCredentialsHandler.value
-        val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value, cred)
+        val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value, cred.get)
         URLHandlerRegistry.setDefault(dispatcher)
       },
       update := update.dependsOn(headerAuthHandler).value,
@@ -98,8 +98,13 @@ object GitlabPlugin extends AutoPlugin {
       ).flatten,
       resolvers ++= gitlabResolvers.value,
       // Adds Coursier repository Authentication for each gitlabResolver
-      csrConfiguration := gitlabResolvers.value.foldRight(csrConfiguration.value){
-        case (repo, csr) => csr.addRepositoryAuthentication(repo.name, Authentication(Seq(gitlabCredentialsHandler.value.key -> gitlabCredentialsHandler.value.value)))
+      csrConfiguration := {
+        gitlabCredentialsHandler.value match {
+          case Some(creds) => gitlabResolvers.value.foldRight(csrConfiguration.value) {
+            case (repo, csr) => csr.addRepositoryAuthentication(repo.name, Authentication(Seq(creds.key -> creds.value)))
+          }
+          case None => csrConfiguration.value
+        }
       },
       publish := publish.dependsOn(headerAuthHandler).value,
       // If no publish location is specified then publish to the project id (if set)
