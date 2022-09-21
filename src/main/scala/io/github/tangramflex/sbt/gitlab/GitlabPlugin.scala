@@ -82,9 +82,10 @@ object GitlabPlugin extends AutoPlugin {
           .map(GitlabCredentials("Job-Token", _))
       },
       headerAuthHandler := {
-        val cred = gitlabCredentialsHandler.value
-        val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value, cred.get)
-        URLHandlerRegistry.setDefault(dispatcher)
+        gitlabCredentialsHandler.value.map{ creds =>
+          val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value, creds)
+          URLHandlerRegistry.setDefault(dispatcher)
+        }
       },
       update := update.dependsOn(headerAuthHandler).value,
       updateClassifiers := updateClassifiers.dependsOn(headerAuthHandler).value,
