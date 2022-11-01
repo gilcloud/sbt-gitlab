@@ -13,7 +13,7 @@ object GitlabPlugin extends AutoPlugin {
   // This plugin will load automatically
   override def trigger: PluginTrigger = allRequirements
 
-  override def projectSettings: Seq[Def.Setting[_]] =
+  override def projectSettings: Seq[Def.Setting[?]] =
     inScope(publish.scopedKey.scope)(gitlabProjectSettings)
 
   object autoImport {
@@ -85,7 +85,9 @@ object GitlabPlugin extends AutoPlugin {
       gitlabCredentials
         .find(_.domain == repo.gitlabDomain)
         .fold(cfg)(token =>
-          cfg.addRepositoryAuthentication(repo.resolverName, Authentication(Seq(token.key -> token.value)))
+          cfg.withAuthenticationByRepositoryId(
+            Vector(repo.resolverName -> Authentication("", "").withHeaders(Seq(token.key -> token.value)))
+          )
         )
     }
 
