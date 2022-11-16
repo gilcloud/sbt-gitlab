@@ -1,15 +1,8 @@
 package com.gilcloud.sbt.gitlab
 
-import okhttp3.OkHttpClient
-import org.apache.ivy.util.url.{
-  URLHandler,
-  URLHandlerDispatcher,
-  URLHandlerRegistry
-}
-import sbt.Keys._
-import sbt.internal.CustomHttp
-import sbt.internal.librarymanagement.ivyint.GigahorseUrlHandler
-import sbt._
+import org.apache.ivy.util.url.{URLHandler, URLHandlerDispatcher, URLHandlerRegistry}
+import sbt.Keys.*
+import sbt.*
 
 import scala.util.Try
 object GitlabPlugin extends AutoPlugin {
@@ -35,35 +28,20 @@ object GitlabPlugin extends AutoPlugin {
   }
   import autoImport._
 
-  def headerEnrichingClientBuilder(
-      existingBuilder: OkHttpClient.Builder,
-      domain: String,
-      optCreds: Option[GitlabCredentials],
-      optLogger: Option[Logger] = None
-  ): OkHttpClient.Builder =
-    optCreds match {
-      case Some(credentials) =>
-        optLogger.foreach(_.debug("building gitlab custom http client"))
-        existingBuilder
-          .addNetworkInterceptor(HeaderInjector(credentials, domain, optLogger))
-      case None =>
-        existingBuilder
-    }
-
-  def dispatcherForClient(client: OkHttpClient): URLHandlerDispatcher =
+  def gitlabUrlHandlerDispatcher(gitlabDomain: String, creds: GitlabCredentials): URLHandlerDispatcher =
     new URLHandlerDispatcher {
       Seq("http", "https") foreach {
-        super.setDownloader(_, new GigahorseUrlHandler(client))
+        super.setDownloader(_, GitlabUrlHandler(gitlabDomain,creds))
       }
-
       override def setDownloader(
           protocol: String,
           downloader: URLHandler
       ): Unit = {}
     }
-  
+
   override def projectSettings: Seq[Def.Setting[_]] =
     inScope(publish.scopedKey.scope)(gitLabProjectSettings)
+
 
   val gitLabProjectSettings : Seq[Def.Setting[_]] = 
     Seq(
@@ -88,16 +66,10 @@ object GitlabPlugin extends AutoPlugin {
               case _                  => true
             })
             .find(_.realm == "gitlab")
-            .map { GitlabCredentials(_) }
+            .map{GitlabCredentials(_)}
         }
-        val logger = streams.value.log
-        val client = headerEnrichingClientBuilder(
-          CustomHttp.okhttpClientBuilder.value,
-          gitlabDomain.value,
-          cred,
-          Some(logger)
-        ).build()
-        val dispatcher = dispatcherForClient(client)
+
+        val dispatcher = gitlabUrlHandlerDispatcher(gitlabDomain.value,cred.get)
         URLHandlerRegistry.setDefault(dispatcher)
       },
       update := update.dependsOn(headerAuthHandler).value,
@@ -107,8 +79,8 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value.map(p => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
-        gitlabGroupId.value.map(g => "gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
+        gitlabProjectId.value.map(p => "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
+        gitlabGroupId.value.map(g => "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
       }
     )
 }
