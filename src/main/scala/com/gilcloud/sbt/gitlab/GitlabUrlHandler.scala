@@ -88,20 +88,21 @@ case class GitlabUrlHandler(gitlabHost: String, credentials: GitlabCredentials) 
   }
 
   private def disconnect(con: URLConnection): Unit = {
-    if (con.isInstanceOf[HttpURLConnection]) {
-      if (!("HEAD" == con.asInstanceOf[HttpURLConnection].getRequestMethod)) { // We must read the response body before disconnecting!
-        // Cfr. http://java.sun.com/j2se/1.5.0/docs/guide/net/http-keepalive.html
-        // [quote]Do not abandon a connection by ignoring the response body. Doing
-        // so may results in idle TCP connections.[/quote]
-        readResponseBody(con.asInstanceOf[HttpURLConnection])
-      }
-      con.asInstanceOf[HttpURLConnection].disconnect()
-    }
-    else if (con != null) try con.getInputStream.close()
-    catch {
-      case e: IOException =>
+    con match {
+      case connection: HttpURLConnection =>
+        if (!("HEAD" == connection.getRequestMethod)) { // We must read the response body before disconnecting!
+          // Cfr. http://java.sun.com/j2se/1.5.0/docs/guide/net/http-keepalive.html
+          // [quote]Do not abandon a connection by ignoring the response body. Doing
+          // so may results in idle TCP connections.[/quote]
+          readResponseBody(connection)
+        }
+        connection.disconnect()
+      case _ => if (con != null) try con.getInputStream.close()
+      catch {
+        case e: IOException =>
 
-      // ignored
+        // ignored
+      }
     }
   }
 
@@ -158,21 +159,20 @@ case class GitlabUrlHandler(gitlabHost: String, credentials: GitlabCredentials) 
         con.setRequestProperty(credentials.key, credentials.value)
       }
 
-      if (con.isInstanceOf[HttpURLConnection]) {
-        val httpCon = con.asInstanceOf[HttpURLConnection]
-        if (getRequestMethod == URLHandler.REQUEST_METHOD_HEAD) httpCon.setRequestMethod("HEAD")
-        if (checkStatusCode(url, httpCon)) {
-          val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
-          return new SbtUrlInfo(true, httpCon.getContentLength, con.getLastModified, bodyCharset)
-        }
-      }
-      else {
-        val contentLength = con.getContentLength
-        if (contentLength <= 0) return UNAVAILABLE
-        else { // TODO: not HTTP... maybe we *don't* want to default to ISO-8559-1 here?
-          val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
-          return new SbtUrlInfo(true, contentLength, con.getLastModified, bodyCharset)
-        }
+      con match {
+        case httpCon: HttpURLConnection =>
+          if (getRequestMethod == URLHandler.REQUEST_METHOD_HEAD) httpCon.setRequestMethod("HEAD")
+          if (checkStatusCode(url, httpCon)) {
+            val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
+            return new SbtUrlInfo(true, httpCon.getContentLength, con.getLastModified, bodyCharset)
+          }
+        case _ =>
+          val contentLength = con.getContentLength
+          if (contentLength <= 0) return UNAVAILABLE
+          else { // TODO: not HTTP... maybe we *don't* want to default to ISO-8559-1 here?
+            val bodyCharset = BasicURLHandler.getCharSetFromContentType(con.getContentType)
+            return new SbtUrlInfo(true, contentLength, con.getLastModified, bodyCharset)
+          }
       }
     } catch {
       case e: UnknownHostException =>
@@ -201,18 +201,19 @@ case class GitlabUrlHandler(gitlabHost: String, credentials: GitlabCredentials) 
         srcConn.setRequestProperty(credentials.key, credentials.value)
       }
 
-      if (srcConn.isInstanceOf[HttpURLConnection]) {
-        val httpCon = srcConn.asInstanceOf[HttpURLConnection]
-        val status = httpCon.getResponseCode
-        if (status == 302 || status == 301) {
-          var location = httpCon.getHeaderField("Location")
-          location = URLDecoder.decode(location, "UTF-8")
-          val next = new URL(location)
-          download(next, dest, l)
-          disconnect(srcConn)
-          return
-        }
-        else if (!checkStatusCode(src, httpCon)) throw new IOException("The HTTP response code for " + src + " did not indicate a success." + " See log for more detail.")
+      srcConn match {
+        case httpCon: HttpURLConnection =>
+          val status = httpCon.getResponseCode
+          if (status == 302 || status == 301) {
+            var location = httpCon.getHeaderField("Location")
+            location = URLDecoder.decode(location, "UTF-8")
+            val next = new URL(location)
+            download(next, dest, l)
+            disconnect(srcConn)
+            return
+          }
+          else if (!checkStatusCode(src, httpCon)) throw new IOException("The HTTP response code for " + src + " did not indicate a success." + " See log for more detail.")
+        case _ =>
       }
       // do the download
       val inStream = getDecodingInputStream(srcConn.getContentEncoding, srcConn.getInputStream)
