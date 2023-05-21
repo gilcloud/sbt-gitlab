@@ -79,8 +79,11 @@ object GitlabPlugin extends AutoPlugin {
         .value,
       publish := publish.dependsOn(headerAuthHandler).value,
       publishTo := (ThisProject / publishTo).value.orElse {
-        gitlabProjectId.value.map(p => "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven") orElse
-        gitlabGroupId.value.map(g => "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
+        gitlabProjectId.value.flatMap { p =>
+          Some( "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/projects/$p/packages/maven")
+        } orElse gitlabGroupId.value.flatMap { g =>
+          Some( "gilcloud-sbt-gitlab-maven" at s"https://${gitlabDomain.value}/api/v4/groups/$g/-/packages/maven")
+        }
       }
     )
 }
